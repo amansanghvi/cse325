@@ -1,3 +1,6 @@
-Assignment_2.c:54:5:main	72	static
-Assignment_2.c:113:6:enable_clocks	8	static
-Assignment_2.c:122:6:set_ports	8	static
+Assignment_2.c:58:5:main	48	static
+Assignment_2.c:126:6:square	48	static
+Assignment_2.c:162:6:circle	32	static
+Assignment_2.c:174:6:wait	16	static
+Assignment_2.c:185:6:init_clocks	8	static
+Assignment_2.c:195:6:init_ports	8	static

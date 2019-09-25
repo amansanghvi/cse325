@@ -18,5 +18,6 @@ typedef struct _Tpm {
 void tpm_init(Tpm_ch *tpm_ch, unsigned char tpm, unsigned char channel, int mod,  unsigned char prescaler, int high_len);
 void tpm_enable(Tpm_ch tpm_ch);
 void tpm_update_val(Tpm_ch tpm_ch, int high_len);
+void tpm_disable(Tpm_ch tpm_ch);
 
 #endif

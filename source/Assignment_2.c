@@ -43,11 +43,15 @@
 /* TODO: insert other include files here. */
 
 /* TODO: insert other definitions and declarations here. */
-#define TPM2_MOD 10000 // 10ms mod (100Hz).
+#define TPM2_MOD 10000-1 // 10ms mod (100Hz).
 #define TPM2_PRESCALE 0x3 // prescaler of 8 (Makes 1 tick 1 microsecond).
+#define CYCLES_PER_MILLIS 0x5DC0
 
 void init_clocks();
 void init_ports();
+void wait(unsigned int millis);
+void circle(Tpm_ch servo, Tpm_ch motor);
+void square(Tpm_ch servo, Tpm_ch motor);
 /*
  * @brief   Application entry point.
  */
@@ -65,54 +69,123 @@ int main(void) {
     init_clocks();
     init_ports();
 
-	Tpm_ch tpm0;
-	tpm_init(&tpm0, 0, 5, 10000, 0x3, 1200); // TPM0_CH5, 10ms mod (100Hz), 2ms on, prescaler of 8 (Makes 1 tick 1 microsecond).
-	tpm_enable(tpm0);
-
-	Tpm_ch pwm_tpm;
-//	tpm_init(&pwm_tpm, 2, 0, TPM2_MOD, TPM2_PRESCALE, 1500); // TPM2_CH0
-//	tpm_enable(pwm_tpm);
-	TPM2->CONTROLS[0].CnSC |= (0x1 << 2) | (0x2 << 4);  // Edge-aligned PWM, Low-true pulses
-	TPM2->MOD = 20000;
-	TPM2->CONTROLS[0].CnV = 2000;
-	TPM2->SC |= TPM2_PRESCALE | 0x01 << 3; // prescale /16
+	Tpm_ch servo_tpm;
+	tpm_init(&servo_tpm, 2, 0, TPM2_MOD, TPM2_PRESCALE, 1000); // TPM2_CH0
 
 	Tpm_ch motor_tpm;
-	tpm_init(&motor_tpm, 2, 1, TPM2_MOD, TPM2_PRESCALE, 1500); // TPM2_CH1
-	tpm_enable(motor_tpm);
+	tpm_init(&motor_tpm, 2, 1, TPM2_MOD, TPM2_PRESCALE, 600); // TPM2_CH1
 
+//	tpm_enable(servo_tpm);
+//	tpm_enable(motor_tpm);
+//	tpm_update_val(servo_tpm, 1480);
+//
+//	wait(10000);
+//
+//	tpm_disable(servo_tpm);
+//	tpm_disable(motor_tpm);
+//
+//	wait(5000);
+//
+//	tpm_enable(servo_tpm);
+//	tpm_enable(motor_tpm);
+//	tpm_update_val(servo_tpm, 1460);
+//
+//	wait(10000);
+//
+//	tpm_disable(servo_tpm);
+//	tpm_disable(motor_tpm);
+//
+//	wait(5000);
+//
+//	tpm_enable(servo_tpm);
+//	tpm_enable(motor_tpm);
+//	tpm_update_val(servo_tpm, 1440);
+//
+//	wait(10000);
+//
+//	tpm_disable(servo_tpm);
+//	tpm_disable(motor_tpm);
+//
+//	wait(5000);
+//
+//	tpm_enable(servo_tpm);
+//	tpm_enable(motor_tpm);
+//	tpm_update_val(servo_tpm, 1420);
+//
+//	wait(10000);
+//
+//	tpm_disable(servo_tpm);
+//	tpm_disable(motor_tpm);
 
-	volatile int a = 0;
-	volatile unsigned long long i = 1;
-
-	while(1) {
-		if (i%1000000 == 0) {
-			if (a) { // LED is active high, so percent is inverted.
-				tpm_update_val(tpm0, 9000); // Lower it.
-//				tpm_update_val(pwm_tpm, 1000); // Lower it.
-				TPM2->CONTROLS[0].CnV = 1100;
-				tpm_update_val(motor_tpm, 1000); // Lower it.
-			} else {
-				tpm_update_val(tpm0, 2000); // Increase it.
-				TPM2->CONTROLS[0].CnV = 1900;
-//				tpm_update_val(pwm_tpm, 0); // Increase it.
-				tpm_update_val(motor_tpm, 2000); // Increase it.
-			}
-			a = a ? 0 : 1;
-			i=1;
-		}
-		i++;
-		/* 'Dummy' NOP to allow source level single stepping of
-			tight while() loop */
-		__asm volatile ("nop");
-	}
+//	circle(servo_tpm, motor_tpm);
+	square(servo_tpm, motor_tpm);
 
     return 0 ;
 }
 
+void square(Tpm_ch servo, Tpm_ch motor) {
+	int corner = 8500/4;
+	int straight = 2500;
+
+	int serv_val = 1470;
+
+	tpm_update_val(servo, serv_val);
+	tpm_update_val(motor, 600);
+	tpm_enable(servo);
+	tpm_enable(motor);
+
+	wait(straight); // Straight
+	tpm_update_val(servo, 1000);
+	wait(corner); // Left
+
+	tpm_update_val(servo, serv_val); // Straight
+	wait(straight);
+	tpm_update_val(servo, 1000); // Left
+	wait(corner);
+
+	tpm_update_val(servo, serv_val); // Straight
+	wait(straight);
+	tpm_update_val(servo, 1000); // Left
+	wait(corner);
+
+	tpm_update_val(servo, serv_val); // Straight
+	wait(straight);
+	tpm_update_val(servo, 1000); // Left
+	wait(corner);
+
+	tpm_update_val(servo, serv_val); // Straight
+
+	tpm_disable(motor);
+	tpm_disable(servo);
+}
+
+void circle(Tpm_ch servo, Tpm_ch motor) {
+	tpm_update_val(servo, 1000);
+	tpm_update_val(motor, 600);
+	tpm_enable(servo);
+	tpm_enable(motor);
+
+	wait(8500);
+
+	tpm_disable(motor);
+	tpm_disable(servo);
+}
+
+void wait(unsigned int millis) {
+	PIT->MCR = 0x0;
+	PIT->CHANNEL[0].LDVAL = millis*CYCLES_PER_MILLIS - 1;
+//	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF_MASK;
+	PIT->CHANNEL[0].TCTRL = (0x1 << 1); // enable Timer 1 interrupts
+	PIT->CHANNEL[0].TCTRL |= (0x1 << 0); // start Timer 1
+	while (PIT->CHANNEL[0].CVAL > 10) {};
+	PIT->MCR = 0x1;
+	PIT->CHANNEL[0].TCTRL = 0; // disable Timer 1.
+}
+
 void init_clocks() {
 	SIM->SCGC6 |= 1 << 24; // Enable TPM0
-	SIM->SCGC6 |= 1 << 26; // Enable TPM2
+	SIM->SCGC6 |= 1 << 26; // Enable TPM2;
+	SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
 	SIM->SOPT2 |= (0x2 << 24); // Set TPM0SRC to OSCERCLK (8MHz).
 	SIM->SCGC5 |= (0x1 << 10); // Enable PORTB
 	SIM->SCGC5 |= (0x1 << 12); // Enable PORTD

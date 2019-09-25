@@ -1,4 +1,5 @@
 tpm.c:12:6:tpm_init	32	static
 tpm.c:23:6:tpm_enable	24	static
-tpm.c:27:6:tpm_update_val	32	static
-tpm.c:31:11:get_tpm	16	static
+tpm.c:27:6:tpm_disable	24	static
+tpm.c:31:6:tpm_update_val	32	static
+tpm.c:41:11:get_tpm	16	static
