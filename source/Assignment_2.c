@@ -40,12 +40,20 @@
 #include "MKL46Z4.h"
 #include "fsl_debug_console.h"
 #include "tpm.h"
-/* TODO: insert other include files here. */
 
-/* TODO: insert other definitions and declarations here. */
 #define TPM2_MOD 10000-1 // 10ms mod (100Hz).
 #define TPM2_PRESCALE 0x3 // prescaler of 8 (Makes 1 tick 1 microsecond).
 #define CYCLES_PER_MILLIS 0x5DC0
+
+#define TURN_DURATION_360 8500
+#define TURN_DURATION_90 TURN_DURATION_360/4
+#define STRAIGHT_DURATION 2500
+
+#define SERVO_STRAIGHT 1470
+#define SERVO_LEFT 1000
+#define SERVO_RIGHT 2000
+
+#define MOTOR_MIN 600
 
 void init_clocks();
 void init_ports();
@@ -71,60 +79,57 @@ int main(void) {
     GPIOE->PCOR |= (1 << 29);
 
 	Tpm_ch servo_tpm;
-	tpm_init(&servo_tpm, 2, 0, TPM2_MOD, TPM2_PRESCALE, 1000); // TPM2_CH0
+	tpm_init(&servo_tpm, 2, 0, TPM2_MOD, TPM2_PRESCALE, SERVO_STRAIGHT); // TPM2_CH0
 
 	Tpm_ch motor_tpm;
-	tpm_init(&motor_tpm, 2, 1, TPM2_MOD, TPM2_PRESCALE, 600); // TPM2_CH1
+	tpm_init(&motor_tpm, 2, 1, TPM2_MOD, TPM2_PRESCALE, MOTOR_MIN); // TPM2_CH1
 
-//	circle(servo_tpm, motor_tpm);
+	circle(servo_tpm, motor_tpm);
+	wait(10000);
 	square(servo_tpm, motor_tpm);
 
     return 0 ;
 }
 
 void square(Tpm_ch servo, Tpm_ch motor) {
-	int corner = 8500/4;
-	int straight = 2500;
 
-	int serv_val = 1470;
-
-	tpm_update_val(servo, serv_val);
-	tpm_update_val(motor, 600);
+	tpm_update_val(servo, STRAIGHT_SERVO);
+	tpm_update_val(motor, MOTOR_MIN);
 	tpm_enable(servo);
 	tpm_enable(motor);
 
-	wait(straight); // Straight
-	tpm_update_val(servo, 1000);
-	wait(corner); // Left
+	wait(STRAIGHT_DURATION); // Straight
+	tpm_update_val(servo, SERVO_LEFT);
+	wait(TURN_DURATION_90); // Left
 
-	tpm_update_val(servo, serv_val); // Straight
-	wait(straight);
-	tpm_update_val(servo, 1000); // Left
-	wait(corner);
+	tpm_update_val(servo, STRAIGHT_SERVO); // Straight
+	wait(STRAIGHT_DURATION);
+	tpm_update_val(servo, SERVO_LEFT); // Left
+	wait(TURN_DURATION_90);
 
-	tpm_update_val(servo, serv_val); // Straight
-	wait(straight);
-	tpm_update_val(servo, 1000); // Left
-	wait(corner);
+	tpm_update_val(servo, STRAIGHT_SERVO); // Straight
+	wait(STRAIGHT_DURATION);
+	tpm_update_val(servo, SERVO_LEFT); // Left
+	wait(TURN_DURATION_90);
 
-	tpm_update_val(servo, serv_val); // Straight
-	wait(straight);
-	tpm_update_val(servo, 1000); // Left
-	wait(corner);
+	tpm_update_val(servo, STRAIGHT_SERVO); // Straight
+	wait(STRAIGHT_DURATION);
+	tpm_update_val(servo, SERVO_LEFT); // Left
+	wait(TURN_DURATION_90);
 
-	tpm_update_val(servo, serv_val); // Straight
+	tpm_update_val(servo, STRAIGHT_SERVO); // Straight
 
 	tpm_disable(motor);
 	tpm_disable(servo);
 }
 
 void circle(Tpm_ch servo, Tpm_ch motor) {
-	tpm_update_val(servo, 1000);
-	tpm_update_val(motor, 600);
+	tpm_update_val(servo, SERVO_LEFT);
+	tpm_update_val(motor, MOTOR_MIN);
 	tpm_enable(servo);
 	tpm_enable(motor);
 
-	wait(8500);
+	wait(TURN_DURATION_360);
 
 	tpm_disable(motor);
 	tpm_disable(servo);
