@@ -64,58 +64,17 @@ int main(void) {
   	/* Init FSL debug console. */
     BOARD_InitDebugConsole();
 
-    PRINTF("Hello World\n");
-
     init_clocks();
     init_ports();
+
+    GPIOE->PDDR |= (1 << 29); // Configure 'pin' for GP-Output
+    GPIOE->PCOR |= (1 << 29);
 
 	Tpm_ch servo_tpm;
 	tpm_init(&servo_tpm, 2, 0, TPM2_MOD, TPM2_PRESCALE, 1000); // TPM2_CH0
 
 	Tpm_ch motor_tpm;
 	tpm_init(&motor_tpm, 2, 1, TPM2_MOD, TPM2_PRESCALE, 600); // TPM2_CH1
-
-//	tpm_enable(servo_tpm);
-//	tpm_enable(motor_tpm);
-//	tpm_update_val(servo_tpm, 1480);
-//
-//	wait(10000);
-//
-//	tpm_disable(servo_tpm);
-//	tpm_disable(motor_tpm);
-//
-//	wait(5000);
-//
-//	tpm_enable(servo_tpm);
-//	tpm_enable(motor_tpm);
-//	tpm_update_val(servo_tpm, 1460);
-//
-//	wait(10000);
-//
-//	tpm_disable(servo_tpm);
-//	tpm_disable(motor_tpm);
-//
-//	wait(5000);
-//
-//	tpm_enable(servo_tpm);
-//	tpm_enable(motor_tpm);
-//	tpm_update_val(servo_tpm, 1440);
-//
-//	wait(10000);
-//
-//	tpm_disable(servo_tpm);
-//	tpm_disable(motor_tpm);
-//
-//	wait(5000);
-//
-//	tpm_enable(servo_tpm);
-//	tpm_enable(motor_tpm);
-//	tpm_update_val(servo_tpm, 1420);
-//
-//	wait(10000);
-//
-//	tpm_disable(servo_tpm);
-//	tpm_disable(motor_tpm);
 
 //	circle(servo_tpm, motor_tpm);
 	square(servo_tpm, motor_tpm);
@@ -174,7 +133,6 @@ void circle(Tpm_ch servo, Tpm_ch motor) {
 void wait(unsigned int millis) {
 	PIT->MCR = 0x0;
 	PIT->CHANNEL[0].LDVAL = millis*CYCLES_PER_MILLIS - 1;
-//	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF_MASK;
 	PIT->CHANNEL[0].TCTRL = (0x1 << 1); // enable Timer 1 interrupts
 	PIT->CHANNEL[0].TCTRL |= (0x1 << 0); // start Timer 1
 	while (PIT->CHANNEL[0].CVAL > 10) {};
@@ -188,11 +146,12 @@ void init_clocks() {
 	SIM->SCGC6 |= (0x1 << 26); // Enable TPM2
 	SIM->SOPT2 |= (0x2 << 24); // Set TPM0SRC to OSCERCLK (8MHz).
 	SIM->SCGC5 |= (0x1 << 10); // Enable PORTB
-	SIM->SCGC5 |= (0x1 << 12); // Enable PORTD
+//	SIM->SCGC5 |= (0x1 << 12); // Enable PORTD
+	SIM->SCGC5 |= (0x1 << 13); // Enable PORTE
 }
 
 void init_ports() {
 	PORTB->PCR[2] |= (0x3 << 8); // MUX for alt 3 (TPM2_CH0).
 	PORTB->PCR[3] |= (0x3 << 8); // MUX for alt 3 (TPM2_CH1).
-	PORTD->PCR[5] |= (0x4 << 8); // MUX for alt 4 (TPM0_CH5).
+	PORTE->PCR[29] |= (1 << 8); // Sets MUX bits to set PORTD pin 29 as GPIO
 }
