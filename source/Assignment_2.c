@@ -183,18 +183,16 @@ void wait(unsigned int millis) {
 }
 
 void init_clocks() {
-	SIM->SCGC6 |= 1 << 24; // Enable TPM0
-	SIM->SCGC6 |= 1 << 26; // Enable TPM2;
 	SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
+	SIM->SCGC6 |= (0x1 << 24); // Enable TPM0
+	SIM->SCGC6 |= (0x1 << 26); // Enable TPM2
 	SIM->SOPT2 |= (0x2 << 24); // Set TPM0SRC to OSCERCLK (8MHz).
 	SIM->SCGC5 |= (0x1 << 10); // Enable PORTB
 	SIM->SCGC5 |= (0x1 << 12); // Enable PORTD
-	SIM->SCGC5 |= (0x1 << 13); // Enable PORTE
 }
 
 void init_ports() {
 	PORTB->PCR[2] |= (0x3 << 8); // MUX for alt 3 (TPM2_CH0).
 	PORTB->PCR[3] |= (0x3 << 8); // MUX for alt 3 (TPM2_CH1).
 	PORTD->PCR[5] |= (0x4 << 8); // MUX for alt 4 (TPM0_CH5).
-	PORTE->PCR[29] |= (0x3 << 8);// MUX to TPM0_CH2
 }
